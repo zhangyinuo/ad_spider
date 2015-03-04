@@ -23,7 +23,7 @@ int utf8_to_gbk(char *sourcebuf, size_t  sourcelen, char  *destbuf, size_t  dest
 		return  -1;
 	}
 	iconv_close(cd);
-	return  0;
+	return  destlen;
 } 
 
 int  gbk_to_utf8( char  *sourcebuf, size_t  sourcelen, char  *destbuf, size_t  destlen )
@@ -55,6 +55,7 @@ int main(int argc, char **argv)
 	char *from = malloc (1024);
 
 	char *to = malloc(2048);
+	memset(to, 0, 2048);
 
 	FILE *fp = fopen(argv[1], "r");
 	if (!fp)
@@ -68,7 +69,7 @@ int main(int argc, char **argv)
 		if (t)
 			*t = 0x0;
 		//fprintf(stdout, "%s\n", from);
-		if (utf8_to_gbk(from, strlen(from), to, 2048))
+		if (utf8_to_gbk(from, strlen(from), to, 2048) < 0)
 		{
 			fprintf(stderr, "utf8_to_gbk err %m\n");
 		}

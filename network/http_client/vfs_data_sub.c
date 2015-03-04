@@ -137,18 +137,18 @@ static void do_process(int fd, char *data, size_t len, int isutf8)
 
 	if (isutf8 == 0)
 	{
-		LOG(vfs_sig_log, LOG_DEBUG, "process {%d} [%s]\n", len, data);
+		LOG(vfs_sig_log, LOG_DEBUG, "process {%d}\n", len);
 		do_process_sub(data, len);
 		return;
 	}
 	char *dst = convert_dst;
-
 	memset(dst, 0, MAX_CONVERT);
 
-	if (utf8_to_gbk(data, len, dst, MAX_CONVERT) == 0)
+	int retlen = utf8_to_gbk(data, len, dst, MAX_CONVERT);
+	if (retlen >= 0)
 	{
-		LOG(vfs_sig_log, LOG_DEBUG, "process utf8 %s\n", dst);
-		do_process_sub(dst, MAX_CONVERT);
+		LOG(vfs_sig_log, LOG_DEBUG, "process utf8 {%d}\n", MAX_CONVERT - retlen);
+		do_process_sub(dst, MAX_CONVERT - retlen);
 	}
 	else
 		LOG(vfs_sig_log, LOG_ERROR, "utf8_to_gbk err %m\n");
