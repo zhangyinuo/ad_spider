@@ -39,46 +39,16 @@ enum {TASK_DST = 0, TASK_SOURCE, TASK_SRC_NOSYNC, TASK_SYNC_ISDIR, TASK_SYNC_VOS
 extern const char *task_status[TASK_UNKNOWN]; 
 extern const char *over_status[OVER_LAST]; 
 typedef struct {
+	char dstip[16];
 	char url[1024];
 	char filename[256];
 	char tmpfile[256];
-	char filemd5[33];
-	char src_domain[16];
-	off_t offsize;
-	uint32_t dstip;    /*本次任务目标ip，在GET或者PUT_FROM时，此ip是本机ip*/
-	time_t starttime;
-	time_t mtime;
-	time_t ctime;
 	off_t fsize;
-	char okindex;
-	char iscallback;
-	char type;         /*文件变换类型，删除还是新增*/
-	int8_t retry;     /*任务执行失败时，根据配置是否执行重新发起任务，已经重试次数，不能超过设定重试次数*/
-	uint8_t overstatus; /*结束状态*/
-	uint8_t isp;     /*voss sync 使用*/
-	mode_t fmode;   /*stupid 为了兼容旧版本，没法对齐了*/
-//	char bk[7];
+	off_t lastlen;
 }t_task_base;
 
 typedef struct {
-	off_t processlen; /*需要获取或者发送的数据长度*/
-	off_t lastlen; /*上一个周期 处理的长度，初始化为0 */
-	time_t   lasttime; /*上个周期时间戳*/
-	time_t   starttime; /*开始时间戳*/
-	time_t	 endtime; /*结束时间戳*/
-	char peerip[16];  /*对端ip*/
-	uint16_t peerport;
-	uint8_t oper_type; /*是从FCS GET文件，还是向同组CS  GET文件 */
-	uint8_t need_sync; /*TASK_SOURCE：本次任务源头，TASK_DST：本次任务目的之一 */
-	uint8_t sync_dir;  /**/
-	uint8_t isp;      /**/
-	uint8_t archive_isp;      /**/
-	uint8_t bk[3];
-}t_task_sub;
-
-typedef struct {
 	t_task_base base;
-	t_task_sub  sub;
 	void *user;
 }t_vfs_taskinfo;
 
@@ -92,23 +62,6 @@ typedef struct {
 	uint8_t bk[3];
 } t_vfs_tasklist;
 
-typedef struct {
-	char domain[64];
-	int d1;
-	int d2;
-	uint32_t ip;
-	time_t task_stime; /*for time_out */
-	time_t starttime; /*同步开始时间点 对CS来说，填写 目录上次同步的时间戳，对FCS来说，填写 0*/ 
-	time_t endtime; /*同步结束时间点，对CS来说 填写 0，对FCS来说，填写FCS最近一次启动的时间戳 */ 
-	char type;  /*ADDFILE, DELFILE 删除同步，只有CS才会发出请求，FCS不会发出删除同步*/
-} t_vfs_sync_task;
-
-typedef struct {
-	uint8_t trycount;
-	t_vfs_sync_task sync_task;
-	list_head_t list;
-} t_vfs_sync_list;
-
 typedef void (*timeout_task)(t_vfs_tasklist *task);
 
 int vfs_get_task(t_vfs_tasklist **task, int status);
@@ -118,8 +71,6 @@ int vfs_set_task(t_vfs_tasklist *task, int status);
 int init_task_info();
 
 int add_task_to_alltask(t_vfs_tasklist *task);
-
-int check_task_from_alltask(t_task_base *base, t_task_sub *sub);
 
 int mod_task_level(char *filename, int type);
 

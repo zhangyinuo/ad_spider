@@ -21,14 +21,6 @@ extern t_ip_info self_ipinfo;
  *本文件有优化余地
  */
 
-static uint32_t g_index = 0;
-
-static void get_tmpstr(char *d, int len)
-{
-	char t[16] = {0x0};
-	get_strtime(t);
-	snprintf(d, len, "_%s_%d", t, g_index++);
-}
 
 static int createdir(char *file)
 {
@@ -113,33 +105,6 @@ int delete_localfile(t_task_base *task)
 
 int check_localfile_md5(t_task_base *task, int type)
 {
-	char outdir[256] = {0x0};
-	if (get_localdir(task, outdir))
-		return LOCALFILE_DIR_E;
-	if (type == VIDEOTMP)  /*tmpfile = "." + file + ".vfs"; */
-	{
-		if (strlen(task->filemd5) != 32)
-			return LOCALFILE_OK;
-		memset(outdir, 0, sizeof(outdir));
-		snprintf(outdir, sizeof(outdir), "%s", task->tmpfile);
-		LOG(glogfd, LOG_DEBUG, "file [%s:%s]\n", outdir, task->tmpfile);
-	}
-	else
-	{
-		if (strlen(task->filemd5) != 32)
-			return LOCALFILE_FILE_E;
-	}
-	char md5[33] = {0x0};
-	if (getfilemd5view(outdir, (unsigned char *)md5))
-		return LOCALFILE_FILE_E;
-	if (strncmp(md5, task->filemd5, 32))
-	{
-		LOG(glogfd, LOG_ERROR, "file [%s], md5[%s:%s]\n", outdir, md5, task->filemd5);
-		return LOCALFILE_MD5_E;
-	}
-	if ((task->fmode & 0644) != 0644)
-		task->fmode = 0664;
-	chmod(outdir, task->fmode);
 	return LOCALFILE_OK;
 }
 
@@ -164,18 +129,6 @@ int open_localfile_4_read(t_task_base *task, int *fd)
 
 int open_tmp_localfile_4_write(t_task_base *task, int *fd)
 {
-	if ((task->fmode & 0644) != 0644)
-		task->fmode = 0664;
-	if (task->offsize > 0)
-	{
-		*fd = open(task->tmpfile, O_CREAT | O_RDWR | O_APPEND | O_LARGEFILE, task->fmode);
-		if (*fd < 0)
-		{
-			LOG(glogfd, LOG_ERROR, "open %s err %m\n", task->tmpfile);
-			return LOCALFILE_OPEN_E;
-		}
-		return LOCALFILE_OK;
-	}
 	char outdir[256] = {0x0};
 	if (get_localdir(task, outdir))
 		return LOCALFILE_DIR_E;
@@ -188,11 +141,8 @@ int open_tmp_localfile_4_write(t_task_base *task, int *fd)
 			return LOCALFILE_DIR_E;
 		}
 	}
-	char tmpstr[32] = {0x0};
-	get_tmpstr(tmpstr, sizeof(tmpstr));
-	strcat(outdir, tmpstr);
-	strcat(outdir, ".vfs");
-	*fd = open(outdir, O_CREAT | O_RDWR | O_LARGEFILE, task->fmode);
+	strcat(outdir, ".tmp");
+	*fd = open(outdir, O_CREAT | O_RDWR | O_LARGEFILE, 0755);
 	if (*fd < 0)
 	{
 		LOG(glogfd, LOG_ERROR, "open %s err %m\n", outdir);
@@ -273,28 +223,6 @@ void localfile_link_task(t_task_base *task)
 
 int get_localfile_stat(t_task_base *task)
 {
-	char outdir[256] = {0x0};
-	if (get_localdir(task, outdir))
-		return LOCALFILE_DIR_E;
-	char *t = strrchr(task->filename, '/');
-	if (t == NULL)
-		return LOCALFILE_DIR_E;
-	t++;
-	strcat(outdir, t);
-	struct stat filestat;
-	if (stat(outdir, &filestat))
-	{
-		LOG(glogfd, LOG_ERROR, "stat file %s err %m!\n", outdir);
-		return LOCALFILE_DIR_E;
-	}
-	task->mtime = filestat.st_mtime;
-	task->ctime = filestat.st_ctime;
-	task->fsize = filestat.st_size;
-	task->fmode = filestat.st_mode;
-	char md5[33] = {0x0};
-	if (getfilemd5view(outdir, (unsigned char *)md5))
-		return LOCALFILE_FILE_E;
-	strcpy(task->filemd5, md5);
 	return LOCALFILE_OK;
 }
 
