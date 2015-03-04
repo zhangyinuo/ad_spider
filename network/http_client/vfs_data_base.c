@@ -169,6 +169,10 @@ static void check_task()
 		create_header(base->url, t + 1, httpheader);
 		active_send(fd, httpheader);
 		*t = '/';
+
+		struct conn *curcon = &acon[fd];
+		vfs_cs_peer *peer = (vfs_cs_peer *) curcon->user;
+		peer->recvtask = task;
 	}
 }
 

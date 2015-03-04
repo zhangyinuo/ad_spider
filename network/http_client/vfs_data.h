@@ -22,7 +22,7 @@
 
 #define SELF_ROLE ROLE_CS
 
-enum SOCK_STAT {LOGOUT = 0, CONNECTED, RECV_HEAD_ING, RECV_BODY_ING};
+enum SOCK_STAT {LOGOUT = 0, CONNECTED, RECV_HEAD_ING, RECV_HEAD_END, RECV_BODY_ING};
 
 extern const char *sock_stat_cmd[] ;
 

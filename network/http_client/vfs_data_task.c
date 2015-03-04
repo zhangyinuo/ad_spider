@@ -24,7 +24,7 @@ int do_prepare_recvfile(int fd, off_t fsize)
 {
 	struct conn *curcon = &acon[fd];
 	vfs_cs_peer *peer = (vfs_cs_peer *) curcon->user;
-	if (peer->sock_stat != RECV_HEAD_ING)
+	if (peer->sock_stat != RECV_HEAD_END)
 	{
 		LOG(vfs_sig_log, LOG_ERROR, "fd[%d] status not recv [%x]\n", fd, peer->sock_stat);
 		return RECV_CLOSE;

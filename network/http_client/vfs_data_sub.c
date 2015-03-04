@@ -120,7 +120,7 @@ static int get_title(char *src, int srclen, char *dst)
 
 }
 
-static void do_process_sub(char *data, int len)
+void do_process_sub(char *data, int len)
 {
 	if (isprint(*data) == 0)
 		return;
@@ -132,13 +132,24 @@ static void do_process_sub(char *data, int len)
 	do_print_process(BODY, data);
 }
 
-static void do_process(int fd, char *data, size_t len, int isutf8)
+static void do_write_tmpfile(int lfd, t_task_base *base, char *data, size_t len)
+{
+	if (write(lfd, data, len) != len)
+	{
+		LOG(vfs_sig_log, LOG_ERROR, "write error %s %ld %m\n", base->tmpfile, len);
+		return;
+	}
+	if (close_tmp_check_mv(base, lfd))
+		LOG(vfs_sig_log, LOG_ERROR, "close_tmp_check_mv error %s %ld %m\n", base->tmpfile, len);
+}
+
+static void do_process(int lfd, t_task_base *base, char *data, size_t len, int isutf8)
 {
 
 	if (isutf8 == 0)
 	{
 		LOG(vfs_sig_log, LOG_DEBUG, "process {%d}\n", len);
-		do_process_sub(data, len);
+		do_write_tmpfile(lfd, base, data, len);
 		return;
 	}
 	char *dst = convert_dst;
@@ -148,7 +159,7 @@ static void do_process(int fd, char *data, size_t len, int isutf8)
 	if (retlen >= 0)
 	{
 		LOG(vfs_sig_log, LOG_DEBUG, "process utf8 {%d}\n", MAX_CONVERT - retlen);
-		do_process_sub(dst, MAX_CONVERT - retlen);
+		do_write_tmpfile(lfd, base, dst, MAX_CONVERT - retlen);
 	}
 	else
 		LOG(vfs_sig_log, LOG_ERROR, "utf8_to_gbk err %m\n");

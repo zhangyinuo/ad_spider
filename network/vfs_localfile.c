@@ -156,26 +156,11 @@ int close_tmp_check_mv(t_task_base *task, int fd)
 		return LOCALFILE_OPEN_E;
 	}
 	close(fd);
-	int ret = check_localfile_md5(task, VIDEOTMP);
-	if (ret != LOCALFILE_OK)
+	if (rename(task->tmpfile, task->filename))
 	{
-		LOG(glogfd, LOG_ERROR, "check_localfile_md5 ERR %s\n", task->filename);
-		return ret;
-	}
-
-	char outdir[256] = {0x0};
-	if (get_localdir(task, outdir))
-	{
-		LOG(glogfd, LOG_ERROR, "get_localdir ERR %s\n", task->filename);
-		return LOCALFILE_DIR_E;
-	}
-	if (rename(task->tmpfile, outdir))
-	{
-		LOG(glogfd, LOG_ERROR, "rename %s to %s err %m\n", task->tmpfile, outdir);
+		LOG(glogfd, LOG_ERROR, "rename %s to %s err %m\n", task->tmpfile, task->filename);
 		return LOCALFILE_RENAME_E;
 	}
-	if (chown(outdir, g_config.dir_uid, g_config.dir_gid))
-		LOG(glogfd, LOG_ERROR, "chown [%s] %d %d [%m][%d]!\n", outdir, g_config.dir_uid, g_config.dir_gid, errno);
 	return LOCALFILE_OK;
 }
 
