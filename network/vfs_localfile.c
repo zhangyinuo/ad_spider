@@ -129,9 +129,7 @@ int open_localfile_4_read(t_task_base *task, int *fd)
 
 int open_tmp_localfile_4_write(t_task_base *task, int *fd)
 {
-	char outdir[256] = {0x0};
-	if (get_localdir(task, outdir))
-		return LOCALFILE_DIR_E;
+	char *outdir = task->tmpfile;
 	if (access(outdir, F_OK) != 0)
 	{
 		LOG(glogfd, LOG_DEBUG, "dir %s not exist, try create !\n", outdir);
@@ -141,15 +139,12 @@ int open_tmp_localfile_4_write(t_task_base *task, int *fd)
 			return LOCALFILE_DIR_E;
 		}
 	}
-	strcat(outdir, ".tmp");
 	*fd = open(outdir, O_CREAT | O_RDWR | O_LARGEFILE, 0755);
 	if (*fd < 0)
 	{
 		LOG(glogfd, LOG_ERROR, "open %s err %m\n", outdir);
 		return LOCALFILE_OPEN_E;
 	}
-	memset(task->tmpfile, 0, sizeof(task->tmpfile));
-	snprintf(task->tmpfile, sizeof(task->tmpfile), "%s", outdir);
 	return LOCALFILE_OK;
 }
 

@@ -190,7 +190,7 @@ static int check_req(int fd)
 	}
 	peer->sock_stat = RECV_BODY_ING;
 	consume_client_data(fd, clen);
-	return 0;
+	return do_prepare_recvfile(fd, fsize);
 }
 
 int svc_recv(int fd) 
@@ -269,5 +269,5 @@ void svc_finiconn(int fd)
 	if (get_client_data(fd, &data, &datalen))
 		return;
 
-	do_process(data, datalen, peer->isutf8);
+	do_process(fd, data, datalen, peer->isutf8);
 }

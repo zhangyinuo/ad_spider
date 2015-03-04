@@ -15,7 +15,7 @@ FILE *fp_body = NULL;
 
 #define MAX_CONVERT 204800
 
-char convert_dst[MAX_CONVERT];
+static __thread char convert_dst[MAX_CONVERT];
 
 enum {SOU = 0, URL, HEAD, BODY};
 
@@ -132,12 +132,12 @@ static void do_process_sub(char *data, int len)
 	do_print_process(BODY, data);
 }
 
-static void do_process(char *data, size_t len, int isutf8)
+static void do_process(int fd, char *data, size_t len, int isutf8)
 {
 
 	if (isutf8 == 0)
 	{
-		LOG(vfs_sig_log, LOG_DEBUG, "process %.*s\n", len, data);
+		LOG(vfs_sig_log, LOG_DEBUG, "process {%d} [%s]\n", len, data);
 		do_process_sub(data, len);
 		return;
 	}

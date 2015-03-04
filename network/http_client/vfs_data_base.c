@@ -70,7 +70,7 @@ static int get_file(char *file)
 	return ret;
 }
 
-void check_task()
+void check_task_backup()
 {
 	static FILE * lastfp = NULL;
 	static int total = 0;
@@ -127,4 +127,48 @@ void check_task()
 	unlink(filename);
 }
 
+static void check_task()
+{
+	t_vfs_tasklist *task = NULL;
+	int ret = 0;
+	while (1)
+	{
+		ret = vfs_get_task(&task, g_queue_tmp);
+		if (ret != GET_TASK_OK)
+			break;
+		vfs_set_task(task, g_queue);
+	}
+
+	int once = 0;
+	while (1)
+	{
+		if (once >= g_config.cs_max_task_run_once)
+		{
+			LOG(vfs_sig_log, LOG_DEBUG, "too many task in cs %d %d\n", once, g_config.cs_max_task_run_once);
+			break;
+		}
+		ret = vfs_get_task(&task, g_queue);
+		if (ret != GET_TASK_OK)
+		{
+			LOG(vfs_sig_log, LOG_TRACE, "vfs_get_task get notihng %d\n", ret);
+			break;
+		}
+		once++;
+
+		t_task_base *base = (t_task_base *) (&(task->task.base));
+		char *t = strchr(base->url, '/');
+		if (t == NULL)
+			continue;
+
+		*t = 0x0;
+		int fd = active_connect(base->dstip, 80);
+		if (fd < 0)
+			continue;
+
+		char httpheader[1024] = {0x0};
+		create_header(base->url, t + 1, httpheader);
+		active_send(fd, httpheader);
+		*t = '/';
+	}
+}
 
