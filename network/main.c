@@ -134,8 +134,6 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "get_self_role ERR!\n");
 		goto error;
 	}
-	if (self_ipinfo.role != ROLE_VOSS_MASTER)
-		ICALL(init_vfs_agent);
 	char *srole = iprole[self_ipinfo.role];
 	LOG(glogfd, LOG_NORMAL, "MY ROLE is %s\n", srole);
 

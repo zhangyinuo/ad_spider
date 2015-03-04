@@ -20,7 +20,6 @@ OBJ= main.o	\
 	vfs_task.o \
 	vfs_localfile.o \
 	vfs_timer.o \
-	vfs_maintain.o \
 	parsepara.o	\
 	vfs_file_filter.o 
 
