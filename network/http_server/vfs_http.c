@@ -107,6 +107,21 @@ static int check_request(int fd, char* data, int len)
 		return -1;
 }
 
+static int push_new_task(http_peer *peer)
+{
+	t_vfs_tasklist *task0 = NULL;
+	if (vfs_get_task(&task0, TASK_HOME))
+	{
+		LOG(vfs_http_log, LOG_ERROR, "fname[%s:%s] do_newtask ERROR!\n", fname, srcip);
+		return -1;
+	}
+	t_vfs_taskinfo *task = &(task0->task);
+	memset(&(task->base), 0, sizeof(task->base));
+	vfs_set_task(task0, TASK_WAIT);
+	LOG(vfs_http_log, LOG_NORMAL, "fname[%s:%s] do_newtask ok!\n", fname, srcip);
+	return 0;
+}
+
 static int handle_request(int cfd) 
 {
 	char httpheader[256] = {0};
@@ -123,7 +138,6 @@ static int handle_request(int cfd)
 	if(fd > 0) {
 		fstat(fd, &st);
 		sprintf(httpheader, "HTTP/1.1 200 OK\r\nContent-Type: video/x-flv\r\nContent-Length: %u\r\n\r\n", (unsigned)st.st_size);
-		
 	}
 	if(fd > 0)
 	{
@@ -131,57 +145,9 @@ static int handle_request(int cfd)
 		set_client_fd(cfd, fd, 0, (uint32_t)st.st_size);
 		return 0;
 	}
+
+	push_new_task(peer);
 	return -1;
-}
-
-static int get_file_from_src(char *fname, char *data, int len)
-{
-	char *p = strstr(data, "Host: ");
-	if (p == NULL)
-	{
-		LOG(vfs_http_log, LOG_ERROR, "fname[%s] no srcip!\n", fname);
-		return -1;
-	}
-	p += 6;
-	char *e = strchr(p, '\r');
-	if (e == NULL)
-	{
-		LOG(vfs_http_log, LOG_ERROR, "fname[%s] srcip error!\n", fname);
-		return -1;
-	}
-	*e = 0x0;
-
-	char srcip[16] = {0x0};
-	snprintf(srcip, sizeof(srcip), "%s", p);
-	*e = '\r';
-
-	t_vfs_tasklist *task0 = NULL;
-	if (vfs_get_task(&task0, TASK_HOME))
-	{
-		LOG(vfs_http_log, LOG_ERROR, "fname[%s:%s] do_newtask ERROR!\n", fname, srcip);
-		return -1;
-	}
-	t_vfs_taskinfo *task = &(task0->task);
-	memset(&(task->base), 0, sizeof(task->base));
-	char *t = strchr(data, '?');
-	if (t == NULL)
-		strncpy(task->base.data, data, len);
-	else
-	{
-		strncpy(task->base.data, data, t - data);
-		t = strstr(t, "\r\n");
-		t += 2;
-		strcat(task->base.data, " HTTP/1.1\r\n");
-		char tmp = *(data + len);
-		*(data + len) = 0x0;
-		strcat(task->base.data, t);
-		*(data + len) = tmp;
-	}
-	strcpy(task->base.filename, fname);
-	add_task_to_alltask(task0);
-	vfs_set_task(task0, TASK_WAIT);
-	LOG(vfs_http_log, LOG_NORMAL, "fname[%s:%s] do_newtask ok!\n", fname, srcip);
-	return 0;
 }
 
 static int check_req(int fd)
