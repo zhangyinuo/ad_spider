@@ -121,7 +121,6 @@ static int handle_request(int cfd)
 	
 	fd = open(filename, O_RDONLY);
 	if(fd > 0) {
-		strcat(filename, ".size");
 		fstat(fd, &st);
 		sprintf(httpheader, "HTTP/1.1 200 OK\r\nContent-Type: video/x-flv\r\nContent-Length: %u\r\n\r\n", (unsigned)st.st_size);
 		
@@ -213,9 +212,6 @@ static int check_req(int fd)
 	{
 		struct conn *curcon = &acon[fd];
 		http_peer *peer = (http_peer *) curcon->user;
-		if (check_task_from_alltask(peer->fname))
-			if (get_file_from_src(peer->fname, data, clen))
-				return RECV_CLOSE;
 		peer->nostandby = 1;
 		peer->hbtime = time(NULL);
 		return SEND_SUSPEND;
