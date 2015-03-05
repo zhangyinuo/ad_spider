@@ -95,6 +95,8 @@ static int check_request(int fd, char* data, int len)
 					strncpy(peer->fname, data + 5, len);
 					return p - data + 4;
 				}
+				else
+					return -3;
 			}
 			return -2;	
 		}
