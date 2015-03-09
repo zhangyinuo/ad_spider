@@ -62,6 +62,16 @@ typedef struct {
 	uint8_t bk[3];
 } t_vfs_tasklist;
 
+typedef struct {
+	list_head_t alist;
+	time_t hbtime;
+	int fd;
+	int local_in_fd; /* 当cs接受对端文件传输时，打开的本地句柄 该fd由插件自己管理 */
+	uint8_t sock_stat;   /* SOCK_STAT */
+	uint8_t nostandby; // 1: delay process 
+	t_task_base base;
+} http_peer;
+
 typedef void (*timeout_task)(t_vfs_tasklist *task);
 
 int vfs_get_task(t_vfs_tasklist **task, int status);

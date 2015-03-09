@@ -26,18 +26,7 @@ enum SOCK_STAT {LOGOUT = 0, CONNECTED, RECV_HEAD_ING, RECV_HEAD_END, RECV_BODY_I
 
 extern const char *sock_stat_cmd[] ;
 
-typedef struct {
-	list_head_t alist;
-	list_head_t hlist;
-	int fd;
-	int local_in_fd; /* 当cs接受对端文件传输时，打开的本地句柄 该fd由插件自己管理 */
-	uint32_t hbtime;
-	uint32_t ip;
-	uint32_t headlen; /*当前传输文件的头信息长度*/
-	uint8_t sock_stat;   /* SOCK_STAT */
-	uint8_t isutf8;
-	t_vfs_tasklist *recvtask; /*当前数据链路正在执行的数据接收任务 */
-} vfs_cs_peer;
+typedef http_peer vfs_cs_peer; 
 
 typedef struct {
 	char username[64];

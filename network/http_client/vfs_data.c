@@ -111,9 +111,7 @@ int svc_initconn(int fd)
 	peer->fd = fd;
 	peer->ip = ip;
 	INIT_LIST_HEAD(&(peer->alist));
-	INIT_LIST_HEAD(&(peer->hlist));
 	list_move_tail(&(peer->alist), &activelist);
-	list_add_head(&(peer->hlist), &online_list[ip&ALLMASK]);
 	LOG(vfs_sig_log, LOG_TRACE, "a new fd[%d] init ok!\n", fd);
 	return 0;
 }
@@ -171,26 +169,8 @@ static int check_req(int fd)
 		LOG(vfs_sig_log, LOG_ERROR, "%s:%d fd[%d] Content-Length: %ld too long!\n", FUNC, LN, fd, fsize);
 		return RECV_CLOSE;
 	}
-	struct conn *curcon = &acon[fd];
-	vfs_cs_peer *peer = (vfs_cs_peer *) curcon->user;
-	char *encode = strstr(data, "Content-Type: ");
-	if (encode)
-	{
-		encode += 14;
-		char *tmp = strstr(encode, "\r\n");
-		if (tmp == NULL)
-		{
-			LOG(vfs_sig_log, LOG_ERROR, "%s:%d fd[%d] error!\n", FUNC, LN, fd);
-			return RECV_CLOSE;
-		}
-		*tmp = 0x0;
-		if (strstr(encode, "charset=utf"))
-			peer->isutf8 = 1;
-
-	}
 	peer->sock_stat = RECV_HEAD_END;
-	consume_client_data(fd, clen);
-	return do_prepare_recvfile(fd, fsize);
+	return do_prepare_recvfile(fd, fsize + clen);
 }
 
 int svc_recv(int fd) 
@@ -202,7 +182,14 @@ recvfileing:
 	list_move_tail(&(peer->alist), &activelist);
 	LOG(vfs_sig_log, LOG_TRACE, "fd[%d] sock stat %d!\n", fd, peer->sock_stat);
 	if (peer->sock_stat == RECV_BODY_ING)
+	{
+		char *data;
+		size_t datalen;
+		if (get_client_data(fd, &data, &datalen))
+			return RECV_ADD_EPOLLIN;
+		consume_client_data(fd, clen);
 		return RECV_ADD_EPOLLIN;
+	}
 	
 	int ret = RECV_ADD_EPOLLIN;;
 	int subret = 0;
@@ -261,7 +248,6 @@ void svc_finiconn(int fd)
 		return;
 	vfs_cs_peer *peer = (vfs_cs_peer *) curcon->user;
 	list_del_init(&(peer->alist));
-	list_del_init(&(peer->hlist));
 	if (peer->sock_stat != RECV_BODY_ING)
 		return;
 	char *data;
@@ -275,5 +261,5 @@ void svc_finiconn(int fd)
 	if (peer->local_in_fd < 0)
 		return;
 
-	do_process(peer->local_in_fd, &(peer->recvtask->task.base), data, datalen, peer->isutf8);
+	//do_process(peer->local_in_fd, &(peer->recvtask->task.base), data, datalen, peer->isutf8);
 }

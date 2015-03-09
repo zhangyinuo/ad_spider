@@ -23,14 +23,6 @@
 #include "vfs_task.h"
 #include "common.h"
 
-typedef struct {
-	list_head_t alist;
-	char fname[256];
-	int fd;
-	uint32_t hbtime;
-	int nostandby; // 1: delay process 
-} http_peer;
-
 int vfs_http_log = -1;
 static list_head_t activelist;  //”√¿¥ºÏ≤‚≥¨ ±
 
@@ -76,32 +68,29 @@ int svc_initconn(int fd)
 	return 0;
 }
 
+static int parse_http(http_peer *peer, char *data, int len)
+{
+	return 0;
+}
+
 static int check_request(int fd, char* data, int len) 
 {
 	if(len < 14)
-		return 0;
+		return 1;
+
+	if (len > 1024)
+		return -1;
 
 	struct conn *c = &acon[fd];
 	http_peer *peer = (http_peer *) c->user;
-	if(!strncmp(data, "GET /", 5)) {
+	if(!strncmp(data, "GET /ED_SPIDER", 14)) {
 		char* p;
-		if((p = strstr(data + 5, "\r\n\r\n")) != NULL) {
+		if((p = strstr(data, "\r\n\r\n")) != NULL) {
 			LOG(vfs_http_log, LOG_DEBUG, "fd[%d] data[%s]!\n", fd, data);
-			char* q;
-			int len;
-			if((q = strstr(data + 5, " HTTP/")) != NULL) {
-				len = q - data - 5;
-				if(len < 1023) {
-					strncpy(peer->fname, data + 5, len);
-					return p - data + 4;
-				}
-				else
-					return -3;
-			}
-			return -2;	
+			return parse_http(peer, data, len); 
 		}
 		else
-			return 0;
+			return 1;
 	}
 	else
 		return -1;
@@ -112,13 +101,14 @@ static int push_new_task(http_peer *peer)
 	t_vfs_tasklist *task0 = NULL;
 	if (vfs_get_task(&task0, TASK_HOME))
 	{
-		LOG(vfs_http_log, LOG_ERROR, "fname[%s:%s] do_newtask ERROR!\n", fname, srcip);
+		LOG(vfs_http_log, LOG_ERROR, "fname[%s:%s] do_newtask error!\n", peer->base.url, peer->base.dstip);
 		return -1;
 	}
 	t_vfs_taskinfo *task = &(task0->task);
 	memset(&(task->base), 0, sizeof(task->base));
+	memcpy(&(task->base), &(peer->base), sizeof(task->base));
 	vfs_set_task(task0, TASK_WAIT);
-	LOG(vfs_http_log, LOG_NORMAL, "fname[%s:%s] do_newtask ok!\n", fname, srcip);
+	LOG(vfs_http_log, LOG_NORMAL, "fname[%s:%s] do_newtask ok!\n", peer->base.url, peer->base.dstip);
 	return 0;
 }
 
@@ -131,7 +121,7 @@ static int handle_request(int cfd)
 	
 	struct conn *c = &acon[cfd];
 	http_peer *peer = (http_peer *) c->user;
-	sprintf(filename, "%s/%s", g_config.docroot, peer->fname);
+	sprintf(filename, "%s/%s", g_config.docroot, peer->base.filename);
 	LOG(vfs_http_log, LOG_NORMAL, "file = %s\n", filename);
 	
 	fd = open(filename, O_RDONLY);
@@ -165,7 +155,7 @@ static int check_req(int fd)
 		LOG(vfs_http_log, LOG_DEBUG, "fd[%d] data error ,not http!\n", fd);
 		return RECV_CLOSE;
 	}
-	if (clen == 0)
+	if (clen > 1)
 	{
 		LOG(vfs_http_log, LOG_DEBUG, "fd[%d] data not suffic!\n", fd);
 		return RECV_ADD_EPOLLIN;

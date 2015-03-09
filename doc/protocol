@@ -1,3 +1,7 @@
 http
 
 httpheader
+url
+dstip
+cookie
+time
