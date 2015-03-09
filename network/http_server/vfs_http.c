@@ -13,6 +13,7 @@
 #include "common.h"
 #include "global.h"
 #include "vfs_so.h"
+#include "GeneralHashFunctions.h"
 #include "myepoll.h"
 #include "protocol.h"
 #include "util.h"
@@ -68,8 +69,48 @@ int svc_initconn(int fd)
 	return 0;
 }
 
+static char * parse_item(char *src, char *item, char **end)
+{
+	char *p = strstr(src, item);
+	if (p == NULL)
+	{
+		LOG(vfs_http_log, LOG_ERROR, "data[%s] no [%s]!\n", src, item);
+		return NULL;
+	}
+
+	p += strlen(item);
+	char *e = strstr(p, "\r\n");
+	if (e == NULL)
+	{
+		LOG(vfs_http_log, LOG_ERROR, "data[%s] no [%s] end!\n", src, item);
+		return NULL;
+	}
+	*e = 0x0;
+
+	*end = e + 2;
+
+	return p;
+}
+
 static int parse_http(http_peer *peer, char *data, int len)
 {
+	char *end = NULL;
+	char *pret = parse_item(data, "URL: ", &end);
+	if (pret == NULL)
+		return -1;
+	snprintf(peer->base.url, sizeof(peer->base.url), "%s", pret);
+	data = end;
+
+	pret = parse_item(data, "dstip: ", &end);
+	if (pret == NULL)
+		return -1;
+	snprintf(peer->base.dstip, sizeof(peer->base.dstip), "%s", pret);
+	data = end;
+
+	uint32_t h1, h2, h3;
+	get_3_hash(peer->base.url, &h1, &h2, &h3);
+	snprintf(peer->base.filename, sizeof(peer->base.filename), "%s/%u/%u/%u", g_config.docroot, h1, h2, h3); 
+	snprintf(peer->base.tmpfile, sizeof(peer->base.tmpfile), "%s/%u/%u/%u.tmp", g_config.docroot, h1, h2, h3); 
 	return 0;
 }
 
@@ -98,6 +139,11 @@ static int check_request(int fd, char* data, int len)
 
 static int push_new_task(http_peer *peer)
 {
+	if (try_touch_tmp_file(&(peer->base)))
+	{
+		LOG(vfs_http_log, LOG_NORMAL, "fname[%s:%s] do_newtask dup!\n", peer->base.url, peer->base.dstip);
+		return -1;
+	}
 	t_vfs_tasklist *task0 = NULL;
 	if (vfs_get_task(&task0, TASK_HOME))
 	{

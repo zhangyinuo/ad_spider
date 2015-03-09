@@ -164,6 +164,20 @@ int close_tmp_check_mv(t_task_base *task, int fd)
 	return LOCALFILE_OK;
 }
 
+int try_touch_tmp_file(t_task_base *base)
+{
+	if (access(base->tmpfile, F_OK) != 0)
+	{
+		LOG(glogfd, LOG_DEBUG, "dir %s not exist, try create !\n", base->tmpfile);
+		if (createdir(base->tmpfile))
+		{
+			LOG(glogfd, LOG_ERROR, "dir %s create %m!\n", base->tmpfile);
+			return LOCALFILE_DIR_E;
+		}
+	}
+	return LOCALFILE_OK;
+}
+
 int check_disk_space(t_task_base *base)
 {
 	char path[256] = {0x0};
