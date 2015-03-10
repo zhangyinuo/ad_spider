@@ -28,6 +28,10 @@
 int vfs_http_log = -1;
 static list_head_t activelist;  //ÓÃÀ´¼ì²â³¬Ê±
 
+extern int topper_queue;
+extern int botter_queue;
+static __thread int idx_queue = 1;
+
 int svc_init(int fd) 
 {
 	char *logname = myconfig_get_value("log_server_logname");
@@ -154,7 +158,10 @@ static int push_new_task(http_peer *peer)
 	t_vfs_taskinfo *task = &(task0->task);
 	memset(&(task->base), 0, sizeof(task->base));
 	memcpy(&(task->base), &(peer->base), sizeof(task->base));
-	vfs_set_task(task0, TASK_WAIT);
+	idx_queue++;
+	if (idx_queue > topper_queue)
+		idx_queue = botter_queue;
+	vfs_set_task(task0, idx_queue);
 	LOG(vfs_http_log, LOG_NORMAL, "fname[%s:%s] do_newtask ok!\n", peer->base.url, peer->base.dstip);
 	return 0;
 }

@@ -43,14 +43,6 @@ static void check_task()
 {
 	t_vfs_tasklist *task = NULL;
 	int ret = 0;
-	while (1)
-	{
-		ret = vfs_get_task(&task, g_queue_tmp);
-		if (ret != GET_TASK_OK)
-			break;
-		vfs_set_task(task, g_queue);
-	}
-
 	int once = 0;
 	while (1)
 	{

@@ -22,11 +22,12 @@
 #define SYNCIP 256
 #define DOMAIN_PREFIX "fcs"
 
+#define TASK_HOME 0
+#define MAX_TASK_QUEUE 65
+
 enum {TASK_MOD_UP = 0, TASK_MOD_DOWN, TASK_MOD_CANCEL};
 
 enum {OPER_IDLE, OPER_GET_REQ, OPER_GET_RSP, OPER_PUT, SYNC_2_GROUP};  /*任务类型 GET FCS-》CS， CS-》CS；PUT CS-》CS*/
-
-enum {TASK_DELAY = 0, TASK_WAIT, TASK_WAIT_TMP, TASK_Q_SYNC_DIR, TASK_Q_SYNC_DIR_TMP, TASK_RUN, TASK_FIN, TASK_CLEAN, TASK_HOME, TASK_SEND, TASK_RECV, TASK_UNKNOWN}; /*任务队列*/  /*add TASK_Q_SYNC_DIR_REQ TASK_Q_SYNC_DIR_RSP for thread sync dir */
 
 enum {TASK_ADDFILE = '0', TASK_DELFILE, TASK_MODFILE, TASK_LINKFILE, TASK_SYNCDIR};  /* 任务类型 */
 
@@ -36,7 +37,6 @@ enum {GET_TASK_ERR = -1, GET_TASK_OK, GET_TASK_NOTHING};  /*从指定队列取任务的结
 
 enum {TASK_DST = 0, TASK_SOURCE, TASK_SRC_NOSYNC, TASK_SYNC_ISDIR, TASK_SYNC_VOSS_FILE}; /*本次任务是否需要相同组机器同步 */
 
-extern const char *task_status[TASK_UNKNOWN]; 
 extern const char *over_status[OVER_LAST]; 
 typedef struct {
 	char dstip[16];

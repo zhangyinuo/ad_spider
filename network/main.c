@@ -32,6 +32,8 @@
 #include "vfs_tmp_status.h"
 #include "vfs_timer.h"
 
+int topper_queue = 1;
+int botter_queue = 1;
 extern t_g_config g_config;
 t_ip_info self_ipinfo;
 time_t vfs_start_time;  /*vfs Æô¶¯Ê±¼ä*/
@@ -124,14 +126,20 @@ int main(int argc, char **argv) {
 	ICALL(init_task_info);
 	ICALL(init_file_filter);
 
-	t_thread_arg arg1;
-	memset(&arg1, 0, sizeof(arg1));
-	arg1.queue = TASK_WAIT;
-	snprintf(arg1.name, sizeof(arg1.name), "./http_client.so");
-	LOG(glogfd, LOG_NORMAL, "prepare start %s\n", arg1.name);
-	arg1.maxevent = myconfig_get_intval("vfs_data_maxevent", 4096);
-	if (init_vfs_thread(&arg1))
-		goto error;
+	t_thread_arg args[MAX_TASK_QUEUE];
+	memset(args, 0, sizeof(args));
+	int i = 1;
+	topper_queue = 8;
+	for( ; i <= 8; i++)
+	{
+		t_thread_arg *arg = &(args[i]);
+		arg->queue = i;
+		snprintf(arg->name, sizeof(arg->name), "./%d_client", i);
+		LOG(glogfd, LOG_NORMAL, "prepare start %s\n", arg->name);
+		arg->maxevent = myconfig_get_intval("vfs_data_maxevent", 4096);
+		if (init_vfs_thread(arg))
+			goto error;
+	}
 
 	thread_jumbo_title();
 	struct threadstat *thst = get_threadstat();

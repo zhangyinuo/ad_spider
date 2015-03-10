@@ -16,17 +16,16 @@ extern int glogfd;
 #define TASK_HASHSIZE 16
 #define TASK_MOD 0x0F
 
-atomic_t taskcount[TASK_UNKNOWN];
+atomic_t taskcount[MAX_TASK_QUEUE];
 static list_head_t alltask[TASK_HASHSIZE];  /*总的任务，用来对任务进行快速定位，查找 ，为Tracker设计,排重*/
 
-static pthread_mutex_t mutex[TASK_UNKNOWN];
+static pthread_mutex_t mutex[MAX_TASK_QUEUE];
 static pthread_mutex_t TASK_ALL = PTHREAD_MUTEX_INITIALIZER;
-static list_head_t vfstask[TASK_UNKNOWN];  /*sub task status ,just for cs or for tracker by cfg*/
+static list_head_t vfstask[MAX_TASK_QUEUE];  /*sub task status ,just for cs or for tracker by cfg*/
 uint64_t need_send_bytes;  /*等待发送的字节数*/
 uint64_t been_send_bytes;  /*已经发送的字节数*/
 extern t_ip_info self_ipinfo;
 
-const char *task_status[TASK_UNKNOWN] = {"TASK_DELAY", "TASK_WAIT", "TASK_WAIT_TMP", "TASK_Q_SYNC_DIR", "TASK_Q_SYNC_DIR_TMP", "TASK_RUN", "TASK_FIN", "TASK_CLEAN", "TASK_HOME", "TASK_SEND", "TASK_RECV"};
 const char *over_status[OVER_LAST] = {"OVER_UNKNOWN", "OVER_OK", "OVER_E_MD5", "OVER_PEERERR", "TASK_EXIST", "OVER_PEERCLOSE", "OVER_UNLINK", "OVER_TIMEOUT", "OVER_MALLOC", "OVER_SRC_DOMAIN_ERR", "OVER_SRC_IP_OFFLINE", "OVER_E_OPEN_SRCFILE", "OVER_E_OPEN_DSTFILE", "OVER_E_IP", "OVER_E_TYPE", "OVER_SEND_LEN", "OVER_TOO_MANY_TRY", "OVER_DISK_ERR"};
 /*
  * every status have a list
@@ -35,7 +34,7 @@ const char *over_status[OVER_LAST] = {"OVER_UNKNOWN", "OVER_OK", "OVER_E_MD5", "
 int vfs_get_task(t_vfs_tasklist **task, int status)
 {
 	int ret = GET_TASK_ERR;
-	if (status < 0 || status >= TASK_UNKNOWN)
+	if (status < 0 || status >= MAX_TASK_QUEUE)
 	{
 		LOG(glogfd, LOG_ERROR, "ERR %s:%d status range error %d\n", FUNC, LN, status);
 		return ret;
@@ -62,7 +61,7 @@ int vfs_get_task(t_vfs_tasklist **task, int status)
 		atomic_dec(&(taskcount[status]));
 		ret = GET_TASK_OK;
 		*task = task0;
-		(*task)->status = TASK_UNKNOWN;
+		(*task)->status = MAX_TASK_QUEUE;
 		list_del_init(&(task0->llist));
 		break;
 	}
@@ -79,7 +78,7 @@ int vfs_get_task(t_vfs_tasklist **task, int status)
 			INIT_LIST_HEAD(&((*task)->llist));
 			INIT_LIST_HEAD(&((*task)->hlist));
 			INIT_LIST_HEAD(&((*task)->userlist));
-			(*task)->status = TASK_UNKNOWN;
+			(*task)->status = MAX_TASK_QUEUE;
 		}
 	}
 
@@ -90,7 +89,7 @@ int vfs_get_task(t_vfs_tasklist **task, int status)
 
 int vfs_set_task(t_vfs_tasklist *task, int status)
 {
-	if (status < 0 || status >= TASK_UNKNOWN)
+	if (status < 0 || status >= MAX_TASK_QUEUE)
 	{
 		LOG(glogfd, LOG_ERROR, "ERR %s:%d status range error %d\n", FUNC, LN, status);
 		return -1;
@@ -104,7 +103,7 @@ int vfs_set_task(t_vfs_tasklist *task, int status)
 	{
 		if (ret != EDEADLK)
 		{
-			LOG(glogfd, LOG_ERROR, "ERR %s:%d [%s] pthread_mutex_timedlock error %d\n", FUNC, LN, task_status[status], ret);
+			LOG(glogfd, LOG_ERROR, "ERR %s:%d pthread_mutex_timedlock error %d\n", FUNC, LN, ret);
 			report_err_2_nm(ID, FUNC, LN, ret);
 			return -1;
 		}
@@ -123,12 +122,12 @@ int vfs_set_task(t_vfs_tasklist *task, int status)
 int init_task_info()
 {
 	int i = 0;
-	for (i = 0; i < TASK_UNKNOWN; i++)
+	for (i = 0; i < MAX_TASK_QUEUE; i++)
 	{
 		INIT_LIST_HEAD(&vfstask[i]);
 		if (pthread_mutex_init(&mutex[i], NULL))
 		{
-			LOG(glogfd, LOG_ERROR, "pthread_mutex_init [%s] err %m\n", task_status[i]);
+			LOG(glogfd, LOG_ERROR, "pthread_mutex_init %d err %m\n", i);
 			report_err_2_nm(ID, FUNC, LN, 0);
 			return -1;
 		}
@@ -273,7 +272,7 @@ int get_timeout_task_from_alltask(int timeout, timeout_task cb)
 
 int scan_some_status_task(int status, timeout_task cb)
 {
-	if (status < 0 || status >= TASK_UNKNOWN)
+	if (status < 0 || status >= MAX_TASK_QUEUE)
 	{
 		LOG(glogfd, LOG_ERROR, "ERR %s:%d status range error %d\n", FUNC, LN, status);
 		return -1;
@@ -308,7 +307,7 @@ int scan_some_status_task(int status, timeout_task cb)
 
 inline int get_task_count(int status)
 {
-	if (status < 0 || status >= TASK_UNKNOWN)
+	if (status < 0 || status >= MAX_TASK_QUEUE)
 	{
 		LOG(glogfd, LOG_ERROR, "ERR %s:%d status range error %d\n", FUNC, LN, status);
 		return -1;
@@ -318,21 +317,6 @@ inline int get_task_count(int status)
 
 void report_2_nm()
 {
-	char buf[256] = {0x0};
-	snprintf(buf, sizeof(buf), "vfs_test=%u|task_timeout=%ld|task_run=%d|task_wait=%d|task_fin=%d|task_clean=%d|task_wait_tmp=%d|", g_config.vfs_test, g_config.task_timeout, get_task_count(TASK_RUN), get_task_count(TASK_WAIT), get_task_count(TASK_FIN), get_task_count(TASK_CLEAN), get_task_count(TASK_WAIT_TMP)); 
-	SetStr(VFS_TASK_COUNT, buf);
-
-	int rulebase = VFS_TASK_DEPTH_BASE;
-	int totaltask = 0;
-	int i = 0;
-	for (i = TASK_DELAY ; i < TASK_HOME; i++)
-	{
-		totaltask += get_task_count(i);
-		SetInt(rulebase, get_task_count(i));
-		rulebase++;
-	}
-	SetInt(VFS_TASK_COUNT_INT, totaltask);
-	LOG(glogfd, LOG_NORMAL, "report 2 nm %s  %d\n", buf, totaltask);
 }
 
 void do_timeout_task()
@@ -360,13 +344,6 @@ int mod_task_level(char *filename, int type)
 	}
 
 	add_task_to_alltask(task);
-
-	if (task->status != TASK_WAIT || task->status != TASK_Q_SYNC_DIR)
-		return -1;
-	if (type == TASK_MOD_UP)
-		vfs_set_task(task, TASK_WAIT);
-	else
-		vfs_set_task(task, TASK_Q_SYNC_DIR);
 
 	return 0;
 }

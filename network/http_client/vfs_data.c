@@ -30,8 +30,7 @@ static __thread list_head_t activelist;  //用来检测超时
 static __thread list_head_t online_list[256]; //用来快速定位查找
 
 int g_proxyed = 0;
-static __thread int g_queue = TASK_WAIT;
-static __thread int g_queue_tmp = TASK_WAIT_TMP;
+static __thread int g_queue = 1;
 t_vfs_up_proxy g_proxy;
 int svc_initconn(int fd); 
 int active_send(int fd, char *data);
@@ -83,7 +82,6 @@ int svc_init(int queue)
 		LOG(vfs_sig_log, LOG_NORMAL, "not proxy mode!\n");
 	
 	g_queue = queue;
-	g_queue_tmp = g_queue + 1;
 
 	return init_stock();
 }
