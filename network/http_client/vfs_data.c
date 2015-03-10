@@ -161,7 +161,7 @@ static int check_req(int fd)
 
 	int clen = end - data;
 	LOG(vfs_sig_log, LOG_DEBUG, "%s:%d fd[%d] Content-Length: %ld!\n", FUNC, LN, fd, fsize);
-	if (fsize > 102400)
+	if (fsize > 1024000)
 	{
 		LOG(vfs_sig_log, LOG_ERROR, "%s:%d fd[%d] Content-Length: %ld too long!\n", FUNC, LN, fd, fsize);
 		return RECV_CLOSE;
@@ -203,7 +203,8 @@ recvfileing:
 		if (base->lastlen >= base->fsize)
 		{
 			close_tmp_check_mv(base, peer->local_in_fd);
-			LOG(vfs_sig_log, LOG_NORMAL, "fd[%d] recv ok %s\n", base->filename);
+			LOG(vfs_sig_log, LOG_NORMAL, "fd[%d] recv ok %s\n", fd, base->filename);
+			peer->local_in_fd = -1;
 			return RECV_CLOSE;
 		}
 		return RECV_ADD_EPOLLIN;
