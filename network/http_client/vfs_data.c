@@ -52,7 +52,7 @@ int svc_init(int queue)
 		logname = "./data_log.log";
 
 	char logname2[256] = {0x0};
-	snprintf(logname2, sizeof(logname2), "%s_%ld", logname, syscall(__NR_gettid));
+	snprintf(logname2, sizeof(logname2), "%s_%d", logname, queue);
 
 	char *cloglevel = myconfig_get_value("log_data_loglevel");
 	int loglevel = LOG_NORMAL;
@@ -82,6 +82,7 @@ int svc_init(int queue)
 		LOG(vfs_sig_log, LOG_NORMAL, "not proxy mode!\n");
 	
 	g_queue = queue;
+	LOG(vfs_sig_log, LOG_NORMAL, "queue = %d !\n", g_queue);
 
 	return init_stock();
 }

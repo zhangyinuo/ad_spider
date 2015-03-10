@@ -174,6 +174,13 @@ int try_touch_tmp_file(t_task_base *base)
 			LOG(glogfd, LOG_ERROR, "dir %s create %m!\n", base->tmpfile);
 			return LOCALFILE_DIR_E;
 		}
+		int fd = open(base->tmpfile, O_CREAT | O_RDWR | O_LARGEFILE, 0755);
+		if (fd < 0)
+		{
+			LOG(glogfd, LOG_ERROR, "open %s error %m!\n", base->tmpfile);
+			return LOCALFILE_OK;
+		}
+		close(fd);
 		return LOCALFILE_DIR_E;
 	}
 	return LOCALFILE_OK;

@@ -146,7 +146,7 @@ static int push_new_task(http_peer *peer)
 {
 	if (try_touch_tmp_file(&(peer->base)) == LOCALFILE_OK)
 	{
-		LOG(vfs_http_log, LOG_NORMAL, "fname[%s:%s] do_newtask dup!\n", peer->base.url, peer->base.dstip);
+		LOG(vfs_http_log, LOG_TRACE, "fname[%s:%s] do_newtask dup!\n", peer->base.url, peer->base.dstip);
 		return -1;
 	}
 	t_vfs_tasklist *task0 = NULL;
@@ -162,7 +162,7 @@ static int push_new_task(http_peer *peer)
 	if (idx_queue > topper_queue)
 		idx_queue = botter_queue;
 	vfs_set_task(task0, idx_queue);
-	LOG(vfs_http_log, LOG_NORMAL, "fname[%s:%s] do_newtask ok!\n", peer->base.url, peer->base.dstip);
+	LOG(vfs_http_log, LOG_NORMAL, "fname[%s:%s:%d] do_newtask ok!\n", peer->base.url, peer->base.dstip, idx_queue);
 	return 0;
 }
 
@@ -175,7 +175,7 @@ static int handle_request(int cfd)
 	struct conn *c = &acon[cfd];
 	http_peer *peer = (http_peer *) c->user;
 	char *filename = peer->base.filename;
-	LOG(vfs_http_log, LOG_NORMAL, "file = %s\n", filename);
+	LOG(vfs_http_log, LOG_DEBUG, "file = %s\n", filename);
 	
 	fd = open(filename, O_RDONLY);
 	if(fd > 0) {
