@@ -90,7 +90,6 @@ int svc_init(int queue)
 
 int svc_initconn(int fd) 
 {
-	uint32_t ip = getpeerip(fd);
 	LOG(vfs_sig_log, LOG_TRACE, "%s:%s:%d\n", ID, FUNC, LN);
 	struct conn *curcon = &acon[fd];
 	if (curcon->user == NULL)
@@ -109,7 +108,6 @@ int svc_initconn(int fd)
 	peer->hbtime = time(NULL);
 	peer->sock_stat = CONNECTED;
 	peer->fd = fd;
-	peer->ip = ip;
 	INIT_LIST_HEAD(&(peer->alist));
 	list_move_tail(&(peer->alist), &activelist);
 	LOG(vfs_sig_log, LOG_TRACE, "a new fd[%d] init ok!\n", fd);
@@ -160,7 +158,7 @@ static int check_req(int fd)
 		return RECV_CLOSE;
 	}
 
-	off_t fsize = atol(pleng + strlen("Content-Length: "));
+	off_t fsize = atol(pleng + 16);
 
 	int clen = end - data;
 	LOG(vfs_sig_log, LOG_DEBUG, "%s:%d fd[%d] Content-Length: %ld!\n", FUNC, LN, fd, fsize);
@@ -169,7 +167,12 @@ static int check_req(int fd)
 		LOG(vfs_sig_log, LOG_ERROR, "%s:%d fd[%d] Content-Length: %ld too long!\n", FUNC, LN, fd, fsize);
 		return RECV_CLOSE;
 	}
+	struct conn *curcon = &acon[fd];
+	vfs_cs_peer *peer = (vfs_cs_peer *) curcon->user;
 	peer->sock_stat = RECV_HEAD_END;
+	/*
+	 * write all rsp to file include http header and http body
+	 */
 	return do_prepare_recvfile(fd, fsize + clen);
 }
 
@@ -187,7 +190,23 @@ recvfileing:
 		size_t datalen;
 		if (get_client_data(fd, &data, &datalen))
 			return RECV_ADD_EPOLLIN;
-		consume_client_data(fd, clen);
+		t_task_base *base = &(peer->base);
+		int remainlen = base->fsize - base->lastlen;
+		datalen = datalen <= remainlen ? datalen : remainlen ; 
+		int n = write(peer->local_in_fd, data, datalen);
+		if (n < 0)
+		{
+			LOG(vfs_sig_log, LOG_ERROR, "fd[%d] write error %m close it!\n", fd);
+			return RECV_CLOSE;  /* ERROR , close it */
+		}
+		consume_client_data(fd, n);
+		base->lastlen += n;
+		if (base->lastlen >= base->fsize)
+		{
+			close_tmp_check_mv(base, peer->local_in_fd);
+			LOG(vfs_sig_log, LOG_NORMAL, "fd[%d] recv ok %s\n", base->filename);
+			return RECV_CLOSE;
+		}
 		return RECV_ADD_EPOLLIN;
 	}
 	
@@ -248,18 +267,4 @@ void svc_finiconn(int fd)
 		return;
 	vfs_cs_peer *peer = (vfs_cs_peer *) curcon->user;
 	list_del_init(&(peer->alist));
-	if (peer->sock_stat != RECV_BODY_ING)
-		return;
-	char *data;
-	size_t datalen;
-	if (get_client_data(fd, &data, &datalen))
-		return;
-
-	if (peer->recvtask == NULL)
-		return;
-
-	if (peer->local_in_fd < 0)
-		return;
-
-	//do_process(peer->local_in_fd, &(peer->recvtask->task.base), data, datalen, peer->isutf8);
 }

@@ -174,6 +174,7 @@ int try_touch_tmp_file(t_task_base *base)
 			LOG(glogfd, LOG_ERROR, "dir %s create %m!\n", base->tmpfile);
 			return LOCALFILE_DIR_E;
 		}
+		return LOCALFILE_DIR_E;
 	}
 	return LOCALFILE_OK;
 }

@@ -15,8 +15,6 @@ FILE *fp_body = NULL;
 
 #define MAX_CONVERT 204800
 
-static __thread char convert_dst[MAX_CONVERT];
-
 enum {SOU = 0, URL, HEAD, BODY};
 
 int active_send(int fd, char *data)
@@ -72,31 +70,6 @@ static void do_print_process(int type, char *data)
 	return;
 }
 
-static int check_sou(char *domain)
-{
-	if (strcasestr(domain, "baidu.com"))
-		return 0;
-	if (strcasestr(domain, "sou.com"))
-		return 0;
-	if (strcasestr(domain, "soso.com"))
-		return 0;
-	if (strcasestr(domain, "haosou.com"))
-		return 0;
-	return -1;
-}
-
-static void do_process_req(char *domain, char *url)
-{
-	u_char durl[1024] = {0x0};
-	u_char *ddurl = durl;
-	ngx_unescape_uri(&ddurl, (u_char **)&url, strlen(url), 0);
-
-	if (check_sou(domain))
-		do_print_process(URL, (char *)durl);
-	else
-		do_print_process(SOU, (char *)durl);
-}
-
 static int get_title(char *src, int srclen, char *dst)
 {
 	char *s = strcasestr(src, "<title>");
@@ -132,36 +105,3 @@ void do_process_sub(char *data, int len)
 	do_print_process(BODY, data);
 }
 
-static void do_write_tmpfile(int lfd, t_task_base *base, char *data, size_t len)
-{
-	if (write(lfd, data, len) != len)
-	{
-		LOG(vfs_sig_log, LOG_ERROR, "write error %s %ld %m\n", base->tmpfile, len);
-		return;
-	}
-	if (close_tmp_check_mv(base, lfd))
-		LOG(vfs_sig_log, LOG_ERROR, "close_tmp_check_mv error %s %ld %m\n", base->tmpfile, len);
-}
-
-static void do_process(int lfd, t_task_base *base, char *data, size_t len, int isutf8)
-{
-
-	if (isutf8 == 0)
-	{
-		LOG(vfs_sig_log, LOG_DEBUG, "process {%d}\n", len);
-		do_write_tmpfile(lfd, base, data, len);
-		return;
-	}
-	char *dst = convert_dst;
-	memset(dst, 0, MAX_CONVERT);
-
-	int retlen = utf8_to_gbk(data, len, dst, MAX_CONVERT);
-	if (retlen >= 0)
-	{
-		LOG(vfs_sig_log, LOG_DEBUG, "process utf8 {%d}\n", MAX_CONVERT - retlen);
-		do_write_tmpfile(lfd, base, dst, MAX_CONVERT - retlen);
-	}
-	else
-		LOG(vfs_sig_log, LOG_ERROR, "utf8_to_gbk err %m\n");
-
-}

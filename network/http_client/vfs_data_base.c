@@ -12,12 +12,6 @@
  */
 volatile extern int maintain ;		//1-维护配置 0 -可以使用
 extern t_vfs_up_proxy g_proxy;
-static char filename[256] = {0x0};
-
-static inline int isDigit(const char *ptr) 
-{
-	return isdigit(*(unsigned char *)ptr);
-}
 
 static int active_connect(char *ip, int port)
 {
@@ -41,90 +35,8 @@ static int active_connect(char *ip, int port)
 static int create_header(char *domain, char *url, char *httpheader)
 {
 	int l = sprintf(httpheader, "GET /%s HTTP/1.1\r\n", url);
-
 	l += sprintf(httpheader + l, "Host: %s\r\nUser-Agent: HTTPCLIENT\r\nConnection: Close\r\n\r\n", domain);
-
 	return l;
-}
-
-static int get_file(char *file)
-{
-	int ret = -1;
-	DIR *dp;
-	struct dirent *dirp;
-	if ((dp = opendir(g_config.docroot)) == NULL) 
-	{
-		LOG(vfs_sig_log, LOG_ERROR, "opendir %s err  %m %d\n", g_config.docroot, sizeof(g_config.docroot));
-		return ret;
-	}
-	LOG(vfs_sig_log, LOG_TRACE, "opendir %s ok \n", g_config.docroot);
-	while((dirp = readdir(dp)) != NULL) 
-	{
-		if (dirp->d_name[0] == '.')
-			continue;
-		snprintf(file, 256, "%s/%s", g_config.docroot, dirp->d_name);
-		ret = 0;
-		break;
-	}
-	closedir(dp);
-	return ret;
-}
-
-void check_task_backup()
-{
-	static FILE * lastfp = NULL;
-	static int total = 0;
-
-	if (lastfp == NULL)
-	{
-		if (get_file(filename))
-			return ;
-
-		lastfp = fopen(filename, "r");
-		if (lastfp == NULL)
-		{
-			LOG(vfs_sig_log, LOG_ERROR, "open %s err  %m\n", filename);
-			return;
-		}
-	}
-
-	int once = 0;
-	char buf[2048] = {0x0};
-
-	while(fgets(buf, sizeof(buf), lastfp))
-	{
-		once++;
-		total++;
-		char *t = strchr(buf, '/');
-		if (t == NULL)
-			continue;
-
-		*t = 0x0;
-		char ip[16] = {0x0};
-		if (get_uint32_ip(buf, ip) == INADDR_NONE)
-			continue;
-		int fd = active_connect(ip, 80);
-		if (fd < 0)
-			continue;
-
-		char httpheader[1024] = {0x0};
-		create_header(buf, t + 1, httpheader);
-		active_send(fd, httpheader);
-		do_process_req(buf, t+1);
-
-		if (once >= 19)
-		{
-			LOG(vfs_sig_log, LOG_NORMAL, "total = %d\n", total);
-			return;
-		}
-	}
-
-	if (once >= 0 && once < 20)
-		return;
-
-	fclose(lastfp);
-	lastfp = NULL;
-	unlink(filename);
 }
 
 static void check_task()
@@ -158,13 +70,22 @@ static void check_task()
 		t_task_base *base = (t_task_base *) (&(task->task.base));
 		char *t = strchr(base->url, '/');
 		if (t == NULL)
+		{
+			LOG(vfs_sig_log, LOG_ERROR, "error url format %s\n", base->url);
+			vfs_set_task(task, TASK_HOME);
 			continue;
+		}
 
 		*t = 0x0;
 		int fd = active_connect(base->dstip, 80);
 		if (fd < 0)
+		{
+			LOG(vfs_sig_log, LOG_ERROR, "active_connect %s:80 error %m\n", base->dstip);
+			vfs_set_task(task, TASK_HOME);
 			continue;
+		}
 
+		vfs_set_task(task, TASK_HOME);
 		char httpheader[1024] = {0x0};
 		create_header(base->url, t + 1, httpheader);
 		active_send(fd, httpheader);
@@ -172,7 +93,7 @@ static void check_task()
 
 		struct conn *curcon = &acon[fd];
 		vfs_cs_peer *peer = (vfs_cs_peer *) curcon->user;
-		peer->recvtask = task;
+		memcpy(&(peer->base), base, sizeof(peer->base));
 	}
 }
 

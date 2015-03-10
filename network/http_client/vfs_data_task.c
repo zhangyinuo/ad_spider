@@ -29,8 +29,7 @@ int do_prepare_recvfile(int fd, off_t fsize)
 		LOG(vfs_sig_log, LOG_ERROR, "fd[%d] status not recv [%x]\n", fd, peer->sock_stat);
 		return RECV_CLOSE;
 	}
-	t_vfs_tasklist *task0 = peer->recvtask;
-	t_task_base *base = &(task0->task.base);
+	t_task_base *base = &(peer->base);
 	base->fsize = fsize;
 	base->lastlen = 0;
 
@@ -39,7 +38,6 @@ int do_prepare_recvfile(int fd, off_t fsize)
 	if (open_tmp_localfile_4_write(base, &(peer->local_in_fd)) != LOCALFILE_OK) 
 	{
 		LOG(vfs_sig_log, LOG_ERROR, "fd[%d] open_tmp_localfile_4_write error %s\n", fd, base->filename);
-		vfs_set_task(task0, TASK_HOME);
 		return RECV_CLOSE;
 	}
 	else

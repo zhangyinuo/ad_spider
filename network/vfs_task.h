@@ -80,6 +80,8 @@ int vfs_set_task(t_vfs_tasklist *task, int status);
 
 int init_task_info();
 
+int try_touch_tmp_file(t_task_base *base);
+
 int add_task_to_alltask(t_vfs_tasklist *task);
 
 int mod_task_level(char *filename, int type);

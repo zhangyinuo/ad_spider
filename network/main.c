@@ -123,19 +123,6 @@ int main(int argc, char **argv) {
 	ICALL(vfs_init);
 	ICALL(init_task_info);
 	ICALL(init_file_filter);
-	if (get_self_info(&self_ipinfo))
-	{
-		LOG(glogfd, LOG_NORMAL, "get_self_role ERR!\n");
-		self_ipinfo.role = ROLE_FCS;
-	}
-	if (self_ipinfo.role <= UNKOWN || self_ipinfo.role >= SELF_IP)
-	{
-		LOG(glogfd, LOG_ERROR, "get_self_role ERR!\n");
-		fprintf(stderr, "get_self_role ERR!\n");
-		goto error;
-	}
-	char *srole = iprole[self_ipinfo.role];
-	LOG(glogfd, LOG_NORMAL, "MY ROLE is %s\n", srole);
 
 	t_thread_arg arg1;
 	memset(&arg1, 0, sizeof(arg1));

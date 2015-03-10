@@ -668,10 +668,8 @@ check_req	network/http_server/vfs_http.c	/^static int check_req(int fd)$/;"	f	fi
 check_request	network/http_server/vfs_http.c	/^static int check_request(int fd, char* data, int len) $/;"	f	file:
 check_self_ip	network/vfs_init.c	/^int check_self_ip(uint32_t ip)$/;"	f
 check_self_stat	network/vfs_init.c	/^void check_self_stat()$/;"	f
-check_sou	network/http_client/vfs_data_sub.c	/^static int check_sou(char *domain)$/;"	f	file:
 check_storage_dir	network/vfs_init.c	/^static int check_storage_dir()$/;"	f	file:
 check_task	network/http_client/vfs_data_base.c	/^static void check_task()$/;"	f	file:
-check_task_backup	network/http_client/vfs_data_base.c	/^void check_task_backup()$/;"	f
 check_tc	network/moni.c	/^void check_tc() $/;"	f
 check_threadmap	network/watchdog.c	/^static void check_threadmap(void) {$/;"	f	file:
 check_timestamp	3rdlib/TNmShm.cpp	/^int NMSHM::check_timestamp()$/;"	f	class:NMSHM
@@ -693,7 +691,6 @@ consume_client_data	network/vfs_so_r.c	/^int consume_client_data(int fd, size_t 
 continue_flag	network/vfs_init.h	/^	uint8_t continue_flag;$/;"	m	struct:__anon53
 control	3rdlib/TNmShm.h	/^	    TShareMem control;$/;"	m	class:NMSHM
 control_shm	3rdlib/TNmShm.h	/^} control_shm;$/;"	t	typeref:struct:__anon1
-convert_dst	network/http_client/vfs_data_sub.c	/^static __thread char convert_dst[MAX_CONVERT];$/;"	v	file:
 count	lib/common.h	/^	int 	 count;$/;"	m	struct:__anon11
 count	test/p_scws.c	/^	int count[MAX_COUNT];$/;"	m	struct:__anon16	file:
 count	test/xdb.class.php	/^		$count = count($this->_sync_nodes);$/;"	v
@@ -753,17 +750,14 @@ do_close	network/vfs_so.c	/^void do_close(int fd)$/;"	f
 do_close	network/vfs_so_r.c	/^void do_close(int fd)$/;"	f
 do_prepare_recvfile	network/http_client/vfs_data_task.c	/^int do_prepare_recvfile(int fd, off_t fsize)$/;"	f
 do_print_process	network/http_client/vfs_data_sub.c	/^static void do_print_process(int type, char *data)$/;"	f	file:
-do_process	network/http_client/vfs_data_sub.c	/^static void do_process(int lfd, t_task_base *base, char *data, size_t len, int isutf8)$/;"	f	file:
 do_process	network/vfs_so.c	/^static void do_process(int fd, int events)$/;"	f	file:
 do_process	network/vfs_so_r.c	/^static void do_process(int fd, int events)$/;"	f	file:
-do_process_req	network/http_client/vfs_data_sub.c	/^static void do_process_req(char *domain, char *url)$/;"	f	file:
 do_process_sub	network/http_client/vfs_data_sub.c	/^void do_process_sub(char *data, int len)$/;"	f
 do_recv	network/vfs_so.c	/^static void do_recv(int fd)$/;"	f	file:
 do_recv	network/vfs_so_r.c	/^static void do_recv(int fd)$/;"	f	file:
 do_send	network/vfs_so.c	/^static void do_send(int fd)$/;"	f	file:
 do_send	network/vfs_so_r.c	/^static void do_send(int fd)$/;"	f	file:
 do_timeout_task	network/vfs_task.c	/^void do_timeout_task()$/;"	f
-do_write_tmpfile	network/http_client/vfs_data_sub.c	/^static void do_write_tmpfile(int lfd, t_task_base *base, char *data, size_t len)$/;"	f	file:
 docroot	network/vfs_init.h	/^	char docroot[256];$/;"	m	struct:__anon53
 domain_prefix	network/vfs_init.h	/^	char domain_prefix[32];$/;"	m	struct:__anon53
 domain_suffix	network/vfs_init.h	/^	char domain_suffix[32];$/;"	m	struct:__anon53
@@ -812,7 +806,6 @@ file	network/vfs_del_file.h	/^	char file[256];$/;"	m	struct:__anon20
 fileinfo	network/vfs_agent.h	/^}fileinfo;$/;"	t	typeref:struct:__anon40
 filemd5	lib/common.h	/^	char     filemd5[36];$/;"	m	struct:__anon11
 filename	lib/common.h	/^	char 	 filename[255];$/;"	m	struct:__anon11
-filename	network/http_client/vfs_data_base.c	/^static char filename[256] = {0x0};$/;"	v	file:
 filename	network/vfs_task.h	/^	char filename[256];$/;"	m	struct:__anon29
 find_last_index	network/vfs_del_file.c	/^int find_last_index(t_task_base *base, time_t last)$/;"	f
 fini_fdinfo	network/fdinfo.c	/^void fini_fdinfo(void) {$/;"	f
@@ -863,7 +856,6 @@ get_fcs_dir_lasttime	network/vfs_localfile.c	/^time_t get_fcs_dir_lasttime(int d
 get_fcs_isp	network/vfs_init.c	/^int get_fcs_isp(int fcs)$/;"	f
 get_fcs_time_stamp	network/vfs_time_stamp.c	/^time_t get_fcs_time_stamp(t_task_base *base)$/;"	f
 get_fcs_time_stamp_by_int	network/vfs_time_stamp.c	/^time_t get_fcs_time_stamp_by_int(int dir1, int dir2)$/;"	f
-get_file	network/http_client/vfs_data_base.c	/^static int get_file(char *file)$/;"	f	file:
 get_from_del_file	network/vfs_del_file.c	/^int get_from_del_file (t_task_base *base, int next, time_t cur)$/;"	f
 get_index	network/parsepara.c	/^inline int get_index(char ch)$/;"	f
 get_init_flag	3rdlib/TNmShm.cpp	/^int NMSHM::get_init_flag()$/;"	f	class:NMSHM
@@ -917,6 +909,7 @@ hash_prime	test/xdb.class.php	/^		$this->hash_prime = $hdr['prime'];$/;"	v
 hash_prime	test/xdb.class.php	/^		if (0 != $prime) $this->hash_prime = $prime;$/;"	v
 hash_prime	test/xdb.class.php	/^	var $hash_prime = XDB_HASH_PRIME;$/;"	v
 hash_size	3rdlib/TShmBuffer.h	/^	int hash_size;$/;"	m	struct:SHM_HEAD
+hbtime	network/vfs_task.h	/^	time_t hbtime;$/;"	m	struct:__anon32
 hdr	test/xdb.class.php	/^		$hdr = unpack('a3tag\/Cver\/Ibase\/Iprime\/Ifsize\/fcheck\/a12reversed', $buf);$/;"	v
 hlist	network/vfs_init.h	/^	list_head_t hlist;$/;"	m	struct:__anon50
 hlist	network/vfs_init.h	/^	list_head_t hlist;$/;"	m	struct:__anon51
@@ -983,7 +976,6 @@ ip2str	lib/util_ip.c	/^char *ip2str(char *str, uint32_t ip) {$/;"	f
 iphome	network/vfs_init.c	/^static list_head_t iphome;$/;"	v	file:
 ipinfo	network/vfs_init.h	/^	t_ip_info ipinfo;$/;"	m	struct:__anon50
 iprole	network/main.c	/^char *iprole[] = {"unkown", "uc", "sm", "tracker", "voss_master", "self_ip"}; $/;"	v
-isDigit	network/http_client/vfs_data_base.c	/^static inline int isDigit(const char *ptr) $/;"	f	file:
 isp	network/vfs_init.h	/^	uint8_t isp[MAXCS_ONEGRUOP];$/;"	m	struct:__anon52
 isp_iplist	network/vfs_init.c	/^list_head_t isp_iplist[256];$/;"	v
 isplist	network/vfs_init.h	/^	list_head_t isplist;$/;"	m	struct:__anon50
@@ -1176,6 +1168,8 @@ p_print	test/p_scws.c	/^static void p_print()$/;"	f	file:
 p_txt	test/p_scws.c	/^static void p_txt(char *text, int type)$/;"	f	file:
 padding	network/watchdog.c	/^		char padding[16<<10];$/;"	m	union:threadmap::__anon36	file:
 parse_args	network/main.c	/^static int parse_args(int argc, char* argv[]) {$/;"	f	file:
+parse_http	network/http_server/vfs_http.c	/^static int parse_http(http_peer *peer, char *data, int len)$/;"	f	file:
+parse_item	network/http_server/vfs_http.c	/^static char * parse_item(char *src, char *item, char **end)$/;"	f	file:
 parse_msg	lib/pro_voss.c	/^int parse_msg(char *inbuf, int inlen, t_head_info *head)$/;"	f
 parse_sig_msg	lib/protocol.c	/^int parse_sig_msg(t_vfs_sig_head *h, t_vfs_sig_body *b, char *s, int slen)$/;"	f
 parsepara	network/parsepara.c	/^int parsepara($/;"	f
@@ -1443,6 +1437,7 @@ trave_stack	test/xdb.class.php	/^		$this->trave_stack = array();$/;"	v
 trave_stack	test/xdb.class.php	/^	var $trave_stack = array();$/;"	v
 trim_in	lib/common.c	/^void trim_in(char *s, char *d)$/;"	f
 true	lib/acl.h	22;"	d
+try_touch_tmp_file	network/vfs_localfile.c	/^int try_touch_tmp_file(t_task_base *base)$/;"	f
 type	lib/common.h	/^	uint8_t  type;$/;"	m	struct:__anon11
 type	network/vfs_file_filter.c	/^	char type;    \/* 0, suffix, 1, prefix, 2, match *\/$/;"	m	struct:__anon38	file:
 u_char	lib/uri_decode.h	/^typedef unsigned char u_char;$/;"	t

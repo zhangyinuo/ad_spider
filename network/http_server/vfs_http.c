@@ -14,6 +14,7 @@
 #include "global.h"
 #include "vfs_so.h"
 #include "GeneralHashFunctions.h"
+#include "vfs_localfile.h"
 #include "myepoll.h"
 #include "protocol.h"
 #include "util.h"
@@ -139,7 +140,7 @@ static int check_request(int fd, char* data, int len)
 
 static int push_new_task(http_peer *peer)
 {
-	if (try_touch_tmp_file(&(peer->base)))
+	if (try_touch_tmp_file(&(peer->base)) == LOCALFILE_OK)
 	{
 		LOG(vfs_http_log, LOG_NORMAL, "fname[%s:%s] do_newtask dup!\n", peer->base.url, peer->base.dstip);
 		return -1;
