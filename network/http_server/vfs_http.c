@@ -169,13 +169,12 @@ static int push_new_task(http_peer *peer)
 static int handle_request(int cfd) 
 {
 	char httpheader[256] = {0};
-	char filename[128] = {0};
 	int fd;
 	struct stat st;
 	
 	struct conn *c = &acon[cfd];
 	http_peer *peer = (http_peer *) c->user;
-	sprintf(filename, "%s/%s", g_config.docroot, peer->base.filename);
+	char *filename = peer->base.filename;
 	LOG(vfs_http_log, LOG_NORMAL, "file = %s\n", filename);
 	
 	fd = open(filename, O_RDONLY);
