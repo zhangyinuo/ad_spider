@@ -129,17 +129,25 @@ int main(int argc, char **argv) {
 	t_thread_arg args[MAX_TASK_QUEUE];
 	memset(args, 0, sizeof(args));
 	int i = 1;
+	t_thread_arg *arg = NULL;
 	topper_queue = 8;
 	for( ; i <= 8; i++)
 	{
-		t_thread_arg *arg = &(args[i]);
+		arg = &(args[i]);
 		arg->queue = i;
-		snprintf(arg->name, sizeof(arg->name), "./%d_client", i);
+		snprintf(arg->name, sizeof(arg->name), "./http_client.so");
 		LOG(glogfd, LOG_NORMAL, "prepare start %s\n", arg->name);
 		arg->maxevent = myconfig_get_intval("vfs_data_maxevent", 4096);
 		if (init_vfs_thread(arg))
 			goto error;
 	}
+
+	arg = &(args[i]);
+	snprintf(arg->name, sizeof(arg->name), "./http_server.so");
+	LOG(glogfd, LOG_NORMAL, "prepare start %s\n", arg->name);
+	arg->maxevent = myconfig_get_intval("vfs_data_maxevent", 4096);
+	if (init_vfs_thread(arg))
+		goto error;
 
 	thread_jumbo_title();
 	struct threadstat *thst = get_threadstat();
