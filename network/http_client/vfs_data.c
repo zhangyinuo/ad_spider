@@ -150,21 +150,20 @@ static int check_req(int fd)
 		return RECV_CLOSE;
 	}
 
+	off_t fsize = 1024000;
+	int clen = end - data;
 	char *pleng = strstr(data, "Content-Length: ");
 	if (pleng == NULL)
-	{
 		LOG(vfs_sig_log, LOG_ERROR, "%s:%d fd[%d] ERROR Content-Length: !\n", FUNC, LN, fd);
-		return RECV_CLOSE;
-	}
-
-	off_t fsize = atol(pleng + 16);
-
-	int clen = end - data;
-	LOG(vfs_sig_log, LOG_DEBUG, "%s:%d fd[%d] Content-Length: %ld!\n", FUNC, LN, fd, fsize);
-	if (fsize > 1024000)
+	else
 	{
-		LOG(vfs_sig_log, LOG_ERROR, "%s:%d fd[%d] Content-Length: %ld too long!\n", FUNC, LN, fd, fsize);
-		return RECV_CLOSE;
+		fsize = atol(pleng + 16);
+		LOG(vfs_sig_log, LOG_DEBUG, "%s:%d fd[%d] Content-Length: %ld!\n", FUNC, LN, fd, fsize);
+		if (fsize > 1024000)
+		{
+			LOG(vfs_sig_log, LOG_ERROR, "%s:%d fd[%d] Content-Length: %ld too long!\n", FUNC, LN, fd, fsize);
+			return RECV_CLOSE;
+		}
 	}
 	struct conn *curcon = &acon[fd];
 	vfs_cs_peer *peer = (vfs_cs_peer *) curcon->user;
@@ -267,4 +266,11 @@ void svc_finiconn(int fd)
 		return;
 	vfs_cs_peer *peer = (vfs_cs_peer *) curcon->user;
 	list_del_init(&(peer->alist));
+	if (peer->local_in_fd <= 0)
+		return;
+
+	t_task_base *base = &(peer->base);
+	close_tmp_check_mv(base, peer->local_in_fd);
+	LOG(vfs_sig_log, LOG_NORMAL, "fd[%d] recv error %s\n", fd, base->filename);
+	peer->local_in_fd = -1;
 }
