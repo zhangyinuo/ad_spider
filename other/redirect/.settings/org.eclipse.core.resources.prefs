@@ -1,0 +1,8 @@
+eclipse.preferences.version=1
+encoding//core/handle.py=utf-8
+encoding/check.py=utf-8
+encoding/config.py=utf-8
+encoding/redirect_server.py=utf-8
+encoding/sniff.py=utf-8
+encoding/tcpdump.py=utf-8
+encoding/test.py=utf-8
