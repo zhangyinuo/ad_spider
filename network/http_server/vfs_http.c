@@ -114,8 +114,9 @@ static int parse_http(http_peer *peer, char *data, int len)
 
 	uint32_t h1, h2, h3;
 	get_3_hash(peer->base.url, &h1, &h2, &h3);
-	snprintf(peer->base.filename, sizeof(peer->base.filename), "%s/%u/%u/%u", g_config.docroot, h1, h2, h3); 
-	snprintf(peer->base.tmpfile, sizeof(peer->base.tmpfile), "%s/%u/%u/%u.tmp", g_config.docroot, h1, h2, h3); 
+	uint32_t idx = h1 & 0x3F;
+	snprintf(peer->base.filename, sizeof(peer->base.filename), "%s/%u/%u/%u/%u", g_config.docroot, idx, h1, h2, h3); 
+	snprintf(peer->base.tmpfile, sizeof(peer->base.tmpfile), "%s/%u/%u/%u/%u.tmp", g_config.docroot, idx, h1, h2, h3); 
 	return 0;
 }
 
