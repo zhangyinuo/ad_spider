@@ -1,5 +1,5 @@
 SUBDIRS = lib 3rdlib network network/http_client  network/http_server
-installdir = /ott/test/
+installdir = /home/st/
 #curday = $(shell date '+%Y%m%d')
 all:
 	@list='$(SUBDIRS)'; for subdir in $$list; do \
